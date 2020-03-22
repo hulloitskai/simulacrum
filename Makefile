@@ -18,7 +18,7 @@ LDFLAGS = -X $(GOMODULE)/internal.Version=$(VERSION)
 
 # Project variables:
 GOENV        ?= development
-GODEFAULTCMD =  game
+GODEFAULTCMD =  .
 GOREGEX      =  \.(go|yaml)$
 
 
@@ -110,7 +110,7 @@ go-generate: # Generate Go source files.
 	 go generate $(__ARGS) ./... && \
 	 echo done >&2
 
-GOCMDDIR     ?= ./cmd
+GOCMDDIR     ?= ./
 GOBUILDDIR   ?= ./dist
 GOBUILDFLAGS  = -trimpath -ldflags "$(LDFLAGS)"
 

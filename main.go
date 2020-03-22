@@ -8,6 +8,7 @@ import (
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
 	"github.com/hajimehoshi/ebiten/inpututil"
+
 	"go.stevenxie.me/simulacrum/life"
 	"go.stevenxie.me/simulacrum/world"
 )

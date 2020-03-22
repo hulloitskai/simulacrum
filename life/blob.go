@@ -6,6 +6,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/hajimehoshi/ebiten"
+
 	"go.stevenxie.me/simulacrum/life/motion"
 	"go.stevenxie.me/simulacrum/world"
 )
@@ -67,7 +68,7 @@ func (b *Blob) Render() (image.Image, error) {
 			opts ebiten.DrawImageOptions
 			b    = canvas.Bounds()
 		)
-		opts.GeoM.Translate(float64(b.Dx())*0.9, float64(b.Dy())/2)
+		opts.GeoM.Translate(float64(b.Dx())*0.84, float64(b.Dy())/2)
 		opts.GeoM.Skew(-0.7, 0)
 		return canvas.DrawImage(img, &opts)
 	}(); err != nil {
