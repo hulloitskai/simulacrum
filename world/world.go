@@ -10,14 +10,15 @@ import (
 	"github.com/hajimehoshi/ebiten/examples/resources/images"
 )
 
-// The World is the setting that simulacrum takes place in.
+// The World is the setting that the simulacrum takes place in.
 type World struct {
 	// World dimensions, in terms of number of tiles.
-	dx, dy int
-	size   int           // width and height of each tile
-	cols   int           // number of columns in the tile image
-	tiles  []int         // tile numbers
-	image  *ebiten.Image // tile image
+	cols, rows int
+	size       int // width and height of each tile
+
+	image *ebiten.Image // tile image
+	tiles []int         // tile numbers
+	count int           // number of tiles in row of image
 
 	// A set of objects.
 	objects []*object
@@ -57,10 +58,10 @@ func New(width, height int) *World {
 	}
 
 	return &World{
-		dx:    dx,
-		dy:    dy,
+		cols:  dx,
+		rows:  dy,
 		size:  size,
-		cols:  cols,
+		count: cols,
 		image: img,
 		tiles: tiles,
 	}
@@ -74,31 +75,31 @@ func NewForScreen(screen *ebiten.Image) *World {
 
 // Bounds returns the bounds of the World.
 func (w *World) Bounds() image.Rectangle {
-	return image.Rect(0, 0, w.dx*w.size, w.dy*w.size)
+	return image.Rect(0, 0, w.cols*w.size, w.rows*w.size)
 }
 
 // Draw draws the world on the screen.
 func (w *World) Draw(screen *ebiten.Image) error {
-	for x := 0; x < w.dx; x++ {
-		for y := 0; y < w.dy; y++ {
+	for x := 0; x < w.cols; x++ {
+		for y := 0; y < w.rows; y++ {
 			var opts ebiten.DrawImageOptions
 			opts.GeoM.Translate(float64(x*w.size), float64(y*w.size))
 
 			var (
 				num = w.tiles[y*w.size+x]
-				nx  = (num % w.cols) * w.size
-				ny  = (num / w.cols) * w.size
+				nx  = (num % w.count) * w.size
+				ny  = (num / w.count) * w.size
 				img = w.image.SubImage(image.Rect(nx, ny, nx+w.size, ny+w.size))
 			)
 			if err := screen.DrawImage(img.(*ebiten.Image), &opts); err != nil {
-				return errors.Wrapf(err, "word: (%d,%d)", x, y)
+				return errors.Wrapf(err, "world: (%d,%d)", x, y)
 			}
 		}
 	}
 
 	for _, obj := range w.objects {
 		if err := obj.Draw(screen); err != nil {
-			return errors.Wrap(err, "draw object")
+			return errors.Wrap(err, "world: draw object")
 		}
 	}
 	return nil

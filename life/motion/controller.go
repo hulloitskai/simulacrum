@@ -20,7 +20,7 @@ type Controller struct {
 // NewController creates a Controller.
 func NewController() *Controller {
 	return &Controller{
-		duration: 12,
+		duration: 16,
 		speed:    1,
 	}
 }
@@ -33,7 +33,7 @@ func (c *Controller) Next() bool { return c.next != Stay }
 
 // Update is called once a tick to update the Controller.
 func (c *Controller) Update(next Intent) {
-	v := ease.OutQuint(float64(c.progress) / float64(c.duration))
+	v := ease.InOutQuint(float64(c.progress) / float64(c.duration))
 
 	c.dy = 0
 	c.dx = 0
