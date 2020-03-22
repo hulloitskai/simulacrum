@@ -1,0 +1,70 @@
+kind: pipeline
+name: default
+
+steps:
+  - name: lint
+    image: stevenxie/revive
+    commands: ["revive -config .revive.toml ./..."]
+
+  - name: info
+    image: alpine/git
+    commands:
+      - git fetch --tags
+      - git describe --tags 2> /dev/null | cut -c 2- > /info/version
+      - git rev-parse HEAD 2> /dev/null > /info/commit
+      - git rev-parse --abbrev-ref HEAD 2> /dev/null > /info/branch
+      - head -1 < go.mod | awk '{print $2}' 2> /dev/null > /info/module
+      - tail -n +1 /info/*
+    volumes:
+      - name: info
+        path: /info
+
+  - name: build_binary
+    image: golang:1.12
+    commands:
+      - export MOD="$(cat /info/module)"
+      - |
+        [ -s /info/version ] && \
+          export VER="$(cat /info/version)" || \
+          export VER="$(cat /info/commit)"
+      - export LDFLAGS="-X $${MOD}/internal/info.Version=$${VER}"
+      - echo "LDFLAGS=$${LDFLAGS}" 1>&2
+      - go test -ldflags "$LDFLAGS" -race ./...
+      - export CGO_ENABLED=0
+      - go build -ldflags "$LDFLAGS" -o ./dist/server ./cmd/server
+    environment:
+      GO111MODULE: 'on'
+      GOPROXY: https://goproxy.io
+    volumes:
+      - name: info
+        path: /info
+
+  - name: build_image
+    image: stevenxie/kaniko-drone
+    settings:
+      repo: stevenxie/api
+      tags:
+        - $(printf '%s-%s' $(cat /i/branch | tr / -) $(cat /i/commit))
+        - |
+          $([ $(cat /i/branch) == master ] && \
+             [ $DRONE_BUILD_EVENT == push ] && \
+             echo latest || true)
+        - |
+          $([ $(cat /i/branch) == master ] && \
+             [ $DRONE_BUILD_EVENT == push ] && \
+             cat /i/version || true)
+      username: stevenxie
+      password:
+        from_secret: docker_pass
+    volumes:
+      - name: info
+        path: /i
+
+
+volumes:
+  - name: info
+    temp: {}
+
+trigger:
+  event:
+    exclude: ["tag"]
