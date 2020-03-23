@@ -20,12 +20,15 @@ func newObject(ent Entity, pos Position) *object {
 	}
 }
 
+// Entity returns the object's underlying Entity.
+func (obj *object) Entity() Entity { return obj.ent }
+
 // Draw draws the object on a screen.
 func (obj *object) Draw(screen *ebiten.Image) error {
 	// Render entity.
 	src, err := obj.ent.Render()
 	if err != nil {
-		return errors.Wrap(err, "world: render entity")
+		return errors.Wrap(err, "render entity")
 	}
 
 	// Configure draw options.
@@ -37,7 +40,7 @@ func (obj *object) Draw(screen *ebiten.Image) error {
 	if !ok {
 		img, err = ebiten.NewImageFromImage(src, ebiten.FilterDefault)
 		if err != nil {
-			return errors.Wrap(err, "world: convert image")
+			return errors.Wrap(err, "convert image")
 		}
 	}
 	return screen.DrawImage(img, &opts)
@@ -45,9 +48,11 @@ func (obj *object) Draw(screen *ebiten.Image) error {
 
 // Update is called once a tick to instruct the object to update its internal
 // state.
-func (obj *object) Update(w *World) {
+func (obj *object) Update(w *World) error {
 	ent := obj.ent
-	ent.Update(w, obj.pos)
+	if err := ent.Update(w, obj.pos); err != nil {
+		return err
+	}
 
 	// Update the object's position using its entity's motion.
 	{
@@ -69,12 +74,13 @@ func (obj *object) Update(w *World) {
 			pos.X = 0
 		case int(pos.Y)+1+eb.Dy() >= wb.Dy():
 			pos.Y = float64(wb.Dy() - eb.Dy() - 1)
-		case pos.X < 0:
+		case pos.Y < 0:
 			pos.Y = 0
 		}
 
 		obj.pos = pos
 	}
+	return nil
 }
 
 // Bounds returns the bounds of the object.

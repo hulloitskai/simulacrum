@@ -9,12 +9,13 @@ import (
 )
 
 var colors = []color.Color{
-	// colorHex("#E1500F"),
-	colorHex("#F28A28"),
-	colorHex("#FEAA38"),
-	colorHex("#FECA4B"),
-	colorHex("#7567F1"),
-	colorHex("#5C44D9"),
+	colorHex("#FFD54F"),
+	colorHex("#FFCA28"),
+	colorHex("#FFC107"),
+	colorHex("#FFB300"),
+	colorHex("#FFA000"),
+	colorHex("#FFA000"),
+	colorHex("#FF6F00"),
 }
 
 func colorHex(hex string) color.Color {

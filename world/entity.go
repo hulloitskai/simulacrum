@@ -19,5 +19,5 @@ type Entity interface {
 	// state.
 	//
 	// The pos of an Entity is the coordinate of its left-bottommost pixel.
-	Update(w *World, pos Position)
+	Update(w *World, pos Position) error
 }

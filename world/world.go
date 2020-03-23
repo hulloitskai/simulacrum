@@ -28,11 +28,11 @@ type World struct {
 func New(width, height int) *World {
 	src, _, err := image.Decode(bytes.NewReader(images.Tiles_png))
 	if err != nil {
-		panic(errors.Wrap(err, "world: decode image"))
+		panic(errors.Wrap(err, "decode image"))
 	}
 	img, err := ebiten.NewImageFromImage(src, ebiten.FilterDefault)
 	if err != nil {
-		panic(errors.Wrap(err, "world: convert image"))
+		panic(errors.Wrap(err, "convert image"))
 	}
 
 	// Generate tile data.
@@ -82,34 +82,37 @@ func (w *World) Bounds() image.Rectangle {
 func (w *World) Draw(screen *ebiten.Image) error {
 	for x := 0; x < w.cols; x++ {
 		for y := 0; y < w.rows; y++ {
-			var opts ebiten.DrawImageOptions
-			opts.GeoM.Translate(float64(x*w.size), float64(y*w.size))
-
 			var (
 				num = w.tiles[y*w.size+x]
 				nx  = (num % w.count) * w.size
 				ny  = (num / w.count) * w.size
 				img = w.image.SubImage(image.Rect(nx, ny, nx+w.size, ny+w.size))
 			)
+
+			var opts ebiten.DrawImageOptions
+			opts.GeoM.Translate(float64(x*w.size), float64(y*w.size))
+
 			if err := screen.DrawImage(img.(*ebiten.Image), &opts); err != nil {
-				return errors.Wrapf(err, "world: (%d,%d)", x, y)
+				return errors.Wrapf(err, "(%d, %d)", x, y)
 			}
 		}
 	}
 
 	for _, obj := range w.objects {
 		if err := obj.Draw(screen); err != nil {
-			return errors.Wrap(err, "world: draw object")
+			return errors.Wrap(err, "draw object")
 		}
 	}
 	return nil
 }
 
 // Update instructs the world to update its internal state.
-func (w *World) Update(screen *ebiten.Image) {
+func (w *World) Update(screen *ebiten.Image) error {
 	// Update each object.
-	for _, obj := range w.objects {
-		obj.Update(w)
+	for i, obj := range w.objects {
+		if err := obj.Update(w); err != nil {
+			return errors.Wrapf(err, "object %d", i)
+		}
 	}
 
 	// Sort w.objects such that any object that is "below" another in the world
@@ -124,6 +127,7 @@ func (w *World) Update(screen *ebiten.Image) {
 
 	// Discard unused variables.
 	_ = screen
+	return nil
 }
 
 // Spawn spawns a new Entity somewhere in the World.
@@ -148,3 +152,20 @@ func (w *World) SpawnAt(ent Entity, pt image.Point) error {
 
 // Count returns the number of entities in the world.
 func (w *World) Count() int { return len(w.objects) }
+
+// EntityNear returns an Entity within a certain pixel distance of pos.
+//
+// Returns nil if no such Entity is found.
+func (w *World) EntityNear(pos Position, within int) Entity {
+	var (
+		pt = pos.Point()
+		dt = image.Pt(within, within)
+	)
+	area := image.Rectangle{Min: pt.Sub(dt), Max: pt.Add(dt)}
+	for _, obj := range w.objects {
+		if obj.Bounds().Overlaps(area) {
+			return obj.Entity()
+		}
+	}
+	return nil
+}

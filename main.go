@@ -31,7 +31,9 @@ func main() {
 			}
 
 			// Update the world.
-			w.Update(screen)
+			if err := w.Update(screen); err != nil {
+				return errors.Wrap(err, "update")
+			}
 
 			// If drawing is not skipped, draw the world.
 			if ebiten.IsDrawingSkipped() {
